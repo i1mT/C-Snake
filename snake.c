@@ -1,139 +1,29 @@
-/******************
-***CÓïÑÔÌ°³ÔÉß ***
-***×÷Õß:iimT*******
-***2016/12/12****
-*******************/
-#include <stdio.h>
-#include <conio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <windows.h>
+//#define _CRT_SECURE_NO_WARNINGS
 
-const int W = 52;//µØÍ¼¿í¶È
-const int H  = 22;//µØÍ¼¸ß¶È
+#include "snake.h"
+
+int W = 52;//µØÍ¼¿í¶È
+int H = 22;//µØÍ¼¸ß¶È
 
 char map[22][52];//¶¨ÒåµØÍ¼
 char key;//ÓÃÀ´±£´æÓÃ»§²Ù×÷Ê±ÊäÈëµÄ¼üÖµ
 
 int direct = 4;//Éßµ±Ç°µÄÔË¶¯·½Ïò
-int food[2] = {9,11};//food[0]Ê³Îïºá×ø±ê  food[1]Ê³Îï×İ×ø±ê
+int food[2];//food[0]Ê³Îïºá×ø±ê  food[1]Ê³Îï×İ×ø±ê
 int head;//¼ÇÂ¼³¤¶È
 
 int snake[400][3];//ÉßµÄËùÓĞ×ø±êµãÒÔ¼°Éß   ÉíÌå(snake[i][0]=0)   ºÍ    ÉßÍ·(snake[i][0]=1)   ´ÓÎ²²¿ÏòÍ·²¿×ß
 
-void init(char map[22][52], int snake[400][3]);//ÓÎÏ·¿ªÊ¼µÄÊ±ºò³õÊ¼»¯
-void makeMap(char map[22][52],int snake[400][3],int food[]);//¸ù¾İmoveºóµÄÉßºÍÉú³ÉµÄfood¸ü¸ÄmapÀïÃæµÄÖµ---ÖÆ×÷µØÍ¼
-void move(int snake[400][3],int direct);//ÈÃÉßµÄ×ø±ê½øĞĞÒÆ¶¯
-void makeFood(int food[]);//Éú³ÉËæ»úÊıÖÆ×÷Ò»¸öÊ³Îï×ø±ê
-void showView(char map[22][52]);  //»æ³öÊÓÍ¼
-int ifEat(int head, int food[2]); //ÅĞ¶ÏÊ³ÎïÊÇ·ñ±»³Ôµô
-int ifReprat(int snake[400][3], int x, int y);//ÅĞ¶ÏÉú³ÉµÄÊ³ÎïÊÇ·ñÓëÉßÓĞÖØ¸´
-int ifBump(int head);//ÅĞ¶ÏÊÇ·ñ»áÏà×²(×²×Ô¼º»ò×²Ç½)
-void getKey();//¶ÁÈ¡¼üÖµ²¢ÖØĞÂÉèÖÃÔË¶¯·½Ïò
-
-
-int main() {
-	init(map, snake);//³õÊ¼»¯µØÍ¼
-	while (1) {
-		getKey();
-		system("cls");
-		Sleep(30);
-		move(snake, direct);//ÈÃÉß¿ªÊ¼ÒÆ¶¯
-		if (!food[0]&&!food[1]) {//Ê³ÎïÒÑ¾­±»³Ôµô--ÖØĞÂÉú³ÉÊ³Îï
-			makeFood(food);//Éú³ÉÊ³Îï×ø±ê
-		}
-		makeMap(map, snake, food);
-		showView(map);
-		if (ifBump(head)) {
-			printf("ÓÎÏ·½áÊø£¬ÄãµÄ³É¼¨Îª£º%d", head);
-			break;
-		}
-		getKey();
-	}
-	getchar();
-	return 0;
-}
-
 void init(char map[22][52], int snake[400][3]) {//³õÊ¼»¯
 	//³õÊ¼»¯Éß
-	snake[0][0] = 0, snake[0][1] = 9, snake[0][2] = 7;
-	snake[1][0] = 0, snake[1][1] = 9, snake[1][2] = 8;
-	snake[2][0] = 1, snake[2][1] = 9, snake[2][2] = 9;//ÉßÍ·
-	//³õÊ¼»¯µØÍ¼
-	for (int i = 0;i<H;i++) {
-		for (int j = 0;j<W;j++) {
-			if (i == 0 || j == 0 || i == H - 1 || j == W - 1) {
-				map[i][j] = '*';
-			}
-			else {
-				map[i][j] = ' ';
-			}
-		}
-	}
-}
-
-void showView(char map[22][52]) {//¸ù¾İmapÊı×éÖĞ´æµÄÖµ´òÓ¡³öÀ´
-	for (int i = 0;i<H;i++) {
-		for (int j = 0;j<W;j++) {
-				printf("%c", map[i][j]);
-		}
-		printf("\n");
-	}
-}
-
-void move(int snake[400][3],int direct) {//ÈÃÉßµÄ×ø±ê¿ªÊ¼ÒÆ¶¯
-	int x, y;//×÷ÎªÁÙÊ±½»»»µÄÖµ  headÎªÉßÍ·
-	for (int i = 0;i < 400;i++) {
-		if (snake[i][0] == 1) {
-			head = i;
-			break;
-		}
-	}
-	//ÕÒµ½Í·²¢½«Í·µÄ×ø±ê±£ÁôÓÃÓÚÏÂÒ»¸ö²¹ÉÏÀ´
-	x = snake[head][1];
-	y = snake[head][2];
-	switch (direct){
-		case 1://ÏòÉÏ
-			snake[head][1]--;//ºá×ø±ê²»±ä£¬×İ×ø±ê+1
-			break;
-		case 2://ÏòÏÂ
-			snake[head][1]++;//ºá×ø±ê²»±ä£¬×Ü×ó±ß-1
-			break;
-		case 3://Ïò×ó
-			snake[head][2]--;//×İ×ø±ê²»±ä£¬ºá×ø±ê-1
-			break;
-		case 4://ÏòÓÒ
-			snake[head][2]++;//×İ×ø±ê²»±ä£¬ºá×ø±ê+1
-			break;
-	}
-	//Í·ÒÑ¾­µ½ÁËÏÂÒ»¸öÎ»ÖÃ£¬ÏÈÅĞ¶ÏÊÇ·ñ»á³ÔµôÊ³Îï£¬½ÓÏÂÀ´½«Ö®Ç°ËùÓĞµÄÉíÌå·Åµ½Ç°Ò»¸öµÄÎ»ÖÃÉÏ
-	if (ifEat(head, food)) {
-		snake[head + 1][0] = 1, snake[head + 1][1] = food[0], snake[head + 1][2] = food[1];//ÖØĞÂ¶¨ÒåÉßÍ·
-		snake[head][0] = 0;//È¡ÏûÖ®Ç°µÄÉßÍ·
-		food[0] = 0, food[1] = 0;//½«µ±Ç°µÄfoodÖÃ¿Õ
-	}
-		for (int j = head - 1;j >= 0;j--) {
-			int temp;
-			temp = x, x = snake[j][1], snake[j][1] = temp;
-			temp = y, y = snake[j][2], snake[j][2] = temp;
-		}
-}
-
-void makeFood(int food[]) {//Éú³ÉÒ»¸öÊ³ÎïµÄ×ø±ê
+	snake[0][0] = 1, snake[0][1] = 9, snake[0][2] = 9;//ÉßÍ·
+	//³õÊ¼»¯Ê³Îï
 	srand(time(0));
-	int x = rand() % 49 + 2, y = rand() % 19 + 2;//Éú³ÉÒ»¸ö1-50µÄÊı×÷Îªºá×ø±ê  1-20µÄÊı×÷Îª×İ×ø±ê
-	while (ifReprat(snake,x,y)) {//Èç¹ûÓĞÖØ¸´¾ÍÖØĞÂÉú³ÉÒ»¸ö  Ö±µ½²»ÖØ¸´ÎªÖ¹
-		x = rand() % 49 + 2, y = rand() % 19 + 2;
-	}
-	food[0] = y;
-	food[1] = x;
-}
-
-void makeMap(char map[22][52], int snake[400][3], int food[]) {//¸ù¾İÉßµÄ×ø±ê  Ê³ÎïµÄ×ø±êÖØÖÃµØÍ¼µÄÖµ
-	int i;
-	//ÖØĞÂ³õÊ¼»¯µØÍ¼
-	for (int i = 0;i<H;i++) {
-		for (int j = 0;j<W;j++) {
+	food[0] = rand() % 19 + 2;
+	food[1] = rand() % 49 + 2;//food[0]Ê³Îïºá×ø±ê  food[1]Ê³Îï×İ×ø±ê
+	//³õÊ¼»¯µØÍ¼
+	for (int i = 0; i<H; i++) {
+		for (int j = 0; j<W; j++) {
 			if (i == 0 || j == 0 || i == H - 1 || j == W - 1) {
 				map[i][j] = '*';
 			}
@@ -142,44 +32,8 @@ void makeMap(char map[22][52], int snake[400][3], int food[]) {//¸ù¾İÉßµÄ×ø±ê  Ê
 			}
 		}
 	}
-	//ÖØĞÂ»æÖÆÉß
-	for (i = 0;i < 400;i++) {
-		if (snake[i][0] == 1) break;
-		map[snake[i][1]][snake[i][2]] = '#';
-	}
-	//»æÖÆÍ·ºÍÊ³Îï
-	map[snake[i][1]][snake[i][2]] = '@';
-	map[food[0]][food[1]] = 'o';
 }
 
-
-int ifEat(int head,int food[2]) {
-	if (snake[head][1] == food[0] && snake[head][2] == food[1])
-		return 1;
-	else
-		return 0;
-}
-
-int ifReprat(int snake[400][3],int x,int y) {//ÅĞ¶ÏÉú³ÉµÄÊ³ÎïÊÇ·ñÓëÉßÓĞÖØ¸´
-	for (int i = 0;i < 400;i++) {
-		if (snake[i][0] == 1) break;
-		if ((snake[i][1] == x&&snake[i][2] == y)) {//ÓĞÖØ¸´
-			return 1;
-		}
-	}
-	return 0;
-}
-
-int ifBump(int head) {//ÅĞ¶ÏÊÇ·ñ»áÏà×²(×²×Ô¼º»ò×²Ç½)
-		if ((snake[head][2]==0|| snake[head][2] == 51)  ||  (snake[head][1] == 0|| snake[head][1] == 21))//×²Ç½
-			return 1;
-		for (int i = 0;i < head-1;i++) {
-			if ((snake[i][1] == snake[head][1]&&snake[i][2] == snake[head][2])) {//´±×Ô¼º
-				return 1;
-			}
-		}
-		return 0;
-}
 void getKey() {
 	if (_kbhit()) {
 		key = _getch();
@@ -202,4 +56,127 @@ void getKey() {
 			direct = 4;
 		break;
 	}
+}
+
+void move(int snake[400][3], int direct) {//ÈÃÉßµÄ×ø±ê¿ªÊ¼ÒÆ¶¯
+	int x, y;//×÷ÎªÁÙÊ±½»»»µÄÖµ  headÎªÉßÍ·
+	for (int i = 0; i < 400; i++) {
+		if (snake[i][0] == 1) {
+			head = i;
+			break;
+		}
+	}
+	//ÕÒµ½Í·²¢½«Í·µÄ×ø±ê±£ÁôÓÃÓÚÏÂÒ»¸ö²¹ÉÏÀ´
+	x = snake[head][1];
+	y = snake[head][2];
+	switch (direct){
+	case 1://ÏòÉÏ
+		snake[head][1]--;//ºá×ø±ê²»±ä£¬×İ×ø±ê-1
+		break;
+	case 2://ÏòÏÂ
+		snake[head][1]++;//ºá×ø±ê²»±ä£¬×İ×ø±ê+1
+		break;
+	case 3://Ïò×ó
+		snake[head][2]--;//×İ×ø±ê²»±ä£¬ºá×ø±ê-1
+		break;
+	case 4://ÏòÓÒ
+		snake[head][2]++;//×İ×ø±ê²»±ä£¬ºá×ø±ê+1
+		break;
+	}
+	//Í·ÒÑ¾­µ½ÁËÏÂÒ»¸öÎ»ÖÃ£¬ÏÈÅĞ¶ÏÊÇ·ñ»á³ÔµôÊ³Îï£¬½ÓÏÂÀ´½«Ö®Ç°ËùÓĞµÄÉíÌå·Åµ½Ç°Ò»¸öµÄÎ»ÖÃÉÏ
+	if (ifEat(head, food)) {
+		snake[head + 1][0] = 1, snake[head + 1][1] = food[0], snake[head + 1][2] = food[1];//ÖØĞÂ¶¨ÒåÉßÍ·
+		snake[head][0] = 0;//È¡ÏûÖ®Ç°µÄÉßÍ·
+		food[0] = 0, food[1] = 0;//½«µ±Ç°µÄfoodÖÃ¿Õ
+		switch (direct){
+		case 1://ÏòÉÏ
+			snake[head][1]++;//ºá×ø±ê²»±ä£¬×İ×ø±ê-1
+			break;
+		case 2://ÏòÏÂ
+			snake[head][1]--;//ºá×ø±ê²»±ä£¬×İ×ø±ê+1
+			break;
+		case 3://Ïò×ó
+			snake[head][2]++;//×İ×ø±ê²»±ä£¬ºá×ø±ê-1
+			break;
+		case 4://ÏòÓÒ
+			snake[head][2]--;//×İ×ø±ê²»±ä£¬ºá×ø±ê+1
+			break;
+		}
+	}
+	else
+	for (int j = head - 1; j >= 0; j--) {
+		int temp;
+		temp = x, x = snake[j][1], snake[j][1] = temp;
+		temp = y, y = snake[j][2], snake[j][2] = temp;
+	}
+}
+
+int ifEat(int head, int food[2]) {
+	if (snake[head][1] == food[0] && snake[head][2] == food[1])
+		return 1;
+	else
+		return 0;
+}
+
+void makeFood(int food[]) {//Éú³ÉÒ»¸öÊ³ÎïµÄ×ø±ê
+	srand(time(0));
+	int x = rand() % 49 + 2, y = rand() % 19 + 2;//Éú³ÉÒ»¸ö1-50µÄÊı×÷Îªºá×ø±ê  1-20µÄÊı×÷Îª×İ×ø±ê
+	while (ifReprat(snake, x, y)) {//Èç¹ûÓĞÖØ¸´¾ÍÖØĞÂÉú³ÉÒ»¸ö  Ö±µ½²»ÖØ¸´ÎªÖ¹
+		x = rand() % 49 + 2, y = rand() % 19 + 2;
+	}
+	food[0] = y;
+	food[1] = x;
+}
+
+int ifReprat(int snake[400][3], int x, int y) {//ÅĞ¶ÏÉú³ÉµÄÊ³ÎïÊÇ·ñÓëÉßÓĞÖØ¸´
+	for (int i = 0; i < 400; i++) {
+		if ((snake[i][1] == x&&snake[i][2] == y)) {//ÓĞÖØ¸´
+			return 1;
+			if (snake[i][0] == 1) break;
+		}
+	}
+	return 0;
+}
+
+void makeMap(char map[22][52], int snake[400][3], int food[]) {//¸ù¾İÉßµÄ×ø±ê  Ê³ÎïµÄ×ø±êÖØÖÃµØÍ¼µÄÖµ
+	int i;
+	//ÖØĞÂ³õÊ¼»¯µØÍ¼
+	for (int i = 0; i<H; i++) {
+		for (int j = 0; j<W; j++) {
+			if (i == 0 || j == 0 || i == H - 1 || j == W - 1) {
+				map[i][j] = '*';
+			}
+			else {
+				map[i][j] = ' ';
+			}
+		}
+	}
+	//ÖØĞÂ»æÖÆÉß
+	for (i = 0; i < 400; i++) {
+		if (snake[i][0] == 1) break;
+		map[snake[i][1]][snake[i][2]] = '#';
+	}
+	//»æÖÆÍ·ºÍÊ³Îï
+	map[snake[i][1]][snake[i][2]] = '@';
+	map[food[0]][food[1]] = 'o';
+}
+
+void showView(char map[22][52]) {//¸ù¾İmapÊı×éÖĞ´æµÄÖµ´òÓ¡³öÀ´
+	for (int i = 0; i<H; i++) {
+		for (int j = 0; j<W; j++) {
+			printf("%c", map[i][j]);
+		}
+		printf("\n");
+	}
+}
+
+int ifBump(int head) {//ÅĞ¶ÏÊÇ·ñ»áÏà×²(×²×Ô¼º»ò×²Ç½)
+	if ((snake[head][2] == 0 || snake[head][2] == 51) || (snake[head][1] == 0 || snake[head][1] == 21))//×²Ç½
+		return 1;
+	for (int i = 0; i < head - 3; i++) {
+		if ((snake[i][1] == snake[head][1] && snake[i][2] == snake[head][2])) {//´±×Ô¼º
+			return 1;
+		}
+	}
+	return 0;
 }
